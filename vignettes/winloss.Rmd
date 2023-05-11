@@ -1,5 +1,5 @@
 ---
-title: "winloss"
+title: "The winloss package"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{winloss}
@@ -14,17 +14,19 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, warning=FALSE}
 library(prodlim)
 library(winloss)
 library(tidyverse)
 library(magrittr)
-library(WR)
 ```
+
+# The HF-ACTION study
 
 The HF-ACTION data comes from the WR package. We perform some initial data cleaning.
 
 ```{r}
+library(WR)
 data <- hfaction_cpx9
 
 # Rename and recode id.
@@ -46,13 +48,13 @@ head(data)
 Now we can run the package command.
 
 ```{r}
-id <- data$id
-time <- data$time
-status <- data$status
-group <- data$group
-type <- c(1,2)
-at <- 47
-fit <- winloss(id, time, status, group, type=type, at=at)
+fit <- winloss(id=data$id,
+               time=data$time, 
+               status=data$status, 
+               group=data$group, 
+               type=c(1,2), 
+               at=47)
+
 c(fit$wr,fit$l_wr,fit$u_wr)
 ```
 

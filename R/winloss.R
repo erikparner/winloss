@@ -4,10 +4,7 @@
 #'
 #' @family table functions
 #' @seealso
-#' \code{\link{winloss}} Inference 
-#'
-#' @examples
-#' winloss(id, time, status, group, at=1)
+#' \code{\link{winloss}} Inference
 #'
 #' @docType package
 #' @name winloss
