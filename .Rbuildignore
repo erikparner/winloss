@@ -1,2 +1,4 @@
 ^winloss\.Rproj$
 ^\.Rproj\.user$
+^doc$
+^Meta$

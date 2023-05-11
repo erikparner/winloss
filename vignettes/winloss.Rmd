@@ -1,0 +1,59 @@
+---
+title: "winloss"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{winloss}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(prodlim)
+library(winloss)
+library(tidyverse)
+library(magrittr)
+library(WR)
+```
+
+The HF-ACTION data comes from the WR package. We perform some initial data cleaning.
+
+```{r}
+data <- hfaction_cpx9
+
+# Rename and recode id.
+data$patid <- as.numeric(substr(data$patid, 6, 12))
+names(data) <- c("id","time","status","group","age60")
+
+# Time=0 problem (id==1359)
+data <- data %>%
+  mutate(time=ifelse(time<0.00001, 0.01, time)) 
+
+# time=lag(time) problem (id=662).
+data <- data %>%
+  group_by(id) %>%
+  mutate(time=ifelse(time==lag(time, default=0),time+0.001,time))
+
+head(data)
+```
+
+Now we can run the package command.
+
+```{r}
+id <- data$id
+time <- data$time
+status <- data$status
+group <- data$group
+type <- c(1,2)
+at <- 47
+fit <- winloss(id, time, status, group, type=type, at=at)
+c(fit$wr,fit$l_wr,fit$u_wr)
+```
+
+
