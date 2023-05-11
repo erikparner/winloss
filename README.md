@@ -1,5 +1,5 @@
 # winloss
 
-Inference for win-loss parameters using censored event data.
+Inference for win-loss parameters using censored event data. 
 
 
