@@ -45,7 +45,7 @@ data <- data %>%
 head(data)
 ```
 
-Now we can run the package command.
+Now we run the package command.
 
 ```{r}
 fit <- winloss(id=data$id,
