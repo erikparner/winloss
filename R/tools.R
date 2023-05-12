@@ -149,6 +149,7 @@ sim_events <- function(n=100, rate=c(0.1,0.2,0.3), theta=0.5, ratec=1, tmax=2) {
   data_long
 }
 
+
 sim_eventsgr <- function(n1=100, rate1=c(0.1,0.2,0.3), ratec1=1,
                          n2=100, rate2=c(0.1,0.2,0.3), ratec2=1,
                          theta=0.5, tmax=2) {
@@ -164,64 +165,29 @@ sim_eventsgr <- function(n1=100, rate1=c(0.1,0.2,0.3), ratec1=1,
   data
 }
 
-
 # A helper function to reshape data on the wide format for one secondary event.
+# Asssuming 0=censoring, 1=primary event, 2=secondary event.
 reshape_wide <- function(data) {
-  data_test <- data %>%
-    group_by(id) %>%
-    mutate(no_rec=n(),
-           sum_status=sum(status))
-  # Observed survival and event.
-  data_two_events <- data_test %>%
-    filter(no_rec==2 & sum_status==3) %>%
-    mutate(type=status,
-           status=1)
-  # Observed event, but no death.
-  data_event <- data_test %>%
-    filter(no_rec==2 & sum_status==2) %>%
-    mutate(type=ifelse(status==2,2,1),
-           status=ifelse(type==2,1,0))
-  # Observed death, but no event.
-  data_death_only <- data_test %>%
-    filter(no_rec==1 & sum_status==1)
-  data_death_only <- bind_rows(data_death_only,data_death_only) %>%
-    arrange(id) %>%
-    group_by(id) %>%
-    mutate(type=row_number(),
-           time=ifelse(type==1,time,1),
-           status=ifelse(type==1,1,0))
-  # No event.
-  data_censoring <- data_test %>%
-    filter(no_rec==1 & sum_status==0)
-  data_censoring <- bind_rows(data_censoring, data_censoring) %>%
-    arrange(id) %>%
-    group_by(id) %>%
-    mutate(type=row_number(),
-           status=0)
-  data_long <- bind_rows(data_two_events,
-                         data_event,
-                         data_death_only,
-                         data_censoring) %>%
-    arrange(id, type) %>%
-    select(id,type,time,status,group)
-
-  data1 <- data_long %>%
-    filter(type==1) %>%
-    arrange(id)
-  data2 <- data_long %>%
-    filter(type==2) %>%
-    arrange(id)
-  data1_wide <- data1 %>%
-    rename(time1=time,
-           status1=status) %>%
-    select(-type)
-  data2_wide <- data2 %>%
-    rename(time2=time,
-           status2=status) %>%
-    select(-type)
-  data_wide <- inner_join(data1_wide,data2_wide) %>%
-    arrange(id) %>%
-    mutate(time2=ifelse(time1<time2,time1,time2))
+  # Primary event.
+  data1 <- subset(data, status %in% c(0,1) )
+  ttilde1 <- data1$time
+  deltatilde1 <- data1$status
+  # Secondary event.
+  time_max <- max(data$time)
+  data2_events <- subset(data, status %in% c(2) )
+  data2 <- data.frame(id=data1$id, ttilde1, deltatilde1, group=data1$group)
+  data2 <- merge(data2, data2_events, all=TRUE)
+  data2$ttilde2 <- data2$time
+  data2$deltatilde2 <- 1
+  data2$deltatilde2[is.na(data2$time)] <- 0
+  # A convention for the death.
+  data2$ttilde2[is.na(data2$time) & data2$deltatilde1==1] <- time_max + 1
+  data2$ttilde2[is.na(data2$time) & data2$deltatilde1==0] <- data2$ttilde1[is.na(data2$time) & data2$deltatilde1==0]
+  ttilde2 <- data2$ttilde2
+  deltatilde2 <- data2$deltatilde2
+  data_wide <- data2
+  data_wide$time <- NULL
+  data_wide$status <- NULL
   data_wide
 }
 
