@@ -1,5 +1,5 @@
 ---
-title: "The winloss package"
+title: "winloss"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{winloss}
@@ -45,7 +45,7 @@ data <- data %>%
 head(data)
 ```
 
-Now we run the package command.
+Now we run the package command,
 
 ```{r}
 fit <- winloss(id=data$id,
@@ -58,4 +58,8 @@ fit <- winloss(id=data$id,
 c(fit$wr,fit$l_wr,fit$u_wr)
 ```
 
+and display the win-ratio with 95% confidence interval:
 
+```{r}
+c(fit$wr,fit$l_wr,fit$u_wr)
+```
