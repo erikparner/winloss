@@ -54,9 +54,13 @@ fit <- winloss(id=data$id,
                group=data$group, 
                type=c(1,2), 
                at=47)
-
-c(fit$wr,fit$l_wr,fit$u_wr)
 ```
+
+The fit contains 
+
+* win-loss of each event type (wl) in the order win$_1$, loss$_1$, ect.
+* 
+
 
 and display the win-ratio with 95% confidence interval:
 
