@@ -389,12 +389,13 @@ second_distribution_extend <- function(dist, addtime) {
 #' @param at The time point where the win-loss probabilities are evaluated.
 #' @param type The type of analysis for each event type:
 #'        1=comparing event times, 2=comparing number of recurrent events at time point at.
+#'        The default is 1 for all event type.
 #' @param conf.level The level of the confidence interval.
-#' @return A list.
+#' @return A list of win-loss parameters, their standard error, and confidence interval.
 #' @export
 #' @examples
 #' winloss(id, time, status, group, at=2)
-winloss <- function(id, time, status, group, at=1, type=NULL, conf.level = 0.95) {
+  winloss <- function(id, time, status, group, at=1, type=NULL, conf.level = 0.95) {
 
   data <- data.frame(id=id, time=time, status=status, group=group)
 
