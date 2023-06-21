@@ -15,12 +15,69 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup, warning=FALSE}
-library(prodlim)
 library(winloss)
-library(tidyverse)
-library(magrittr)
 ```
 
 
-See the package README file.
+## Example
+
+The package uses the R package prodlim.
+
+```{r example}
+
+## basic example code
+fit <- winloss(id=hf_action$id,
+               time=hf_action$time, 
+               status=hf_action$status, 
+               group=hf_action$group, 
+               type=c(1,2), 
+               at=47)
+```
+
+The fit contain a vector of the win-loss parameter *wl* ordered as: first win, first loss, second win, second loss, ect. The asumptotic variance *sigma*. For all win-loss parameters, stub say, the fit contains the standard error, *se_stub*, lower and upper 95% confidence interval, *l_stub* and *u_stub*. The coverage of the confidence interval can be changed in the win-loss function. The parameters are
+
+* win-loss of each event type: *wl*
+* total win ratio and log win ratio: *wr* and *logwr*
+* total win difference: *wd*
+* event specific win ratio and log win ratio: *wrk* and *logwrk*
+* event specific win difference: *wrk* and *logwrk*
+* total win and loss: *w* and *l*
+* event specific ranking probability: *rankedk*
+* total ranking probability: *ranked*
+
+For example, display the win-ratio with 95% confidence interval:
+
+```{r example-result}
+c(fit$wr,fit$l_wr,fit$u_wr)
+```
+
+
+# The HF-ACTION study
+
+The HF-ACTION data comes from the WR package. We performed some initial data cleaning:
+
+```{r , eval=FALSE, warning=FALSE, message = FALSE}
+library(WR)
+library(tidyverse)
+library(magrittr)
+
+data <- hfaction_cpx9
+
+# Rename and recode id.
+data$patid <- as.numeric(substr(data$patid, 6, 12))
+names(data) <- c("id","time","status","group","age60")
+
+# Time=0 problem (id==1359)
+data <- data %>%
+  mutate(time=ifelse(time<0.00001, 0.01, time)) 
+
+# time=lag(time) problem (id=662).
+data <- data %>%
+  group_by(id) %>%
+  mutate(time=ifelse(time==lag(time, default=0),time+0.001,time))
+
+head(data)
+
+hf_action <- data
+```
 

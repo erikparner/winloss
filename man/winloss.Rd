@@ -19,13 +19,12 @@ winloss(id, time, status, group, at = 1, type = NULL, conf.level = 0.95)
 \item{at}{The time point where the win-loss probabilities are evaluated.}
 
 \item{type}{The type of analysis for each event type:
-1=comparing event times, 2=comparing number of recurrent events at time point at.
-The default is 1 for all event type.}
+1=comparing event times, 2=comparing number of recurrent events at time point at.}
 
 \item{conf.level}{The level of the confidence interval.}
 }
 \value{
-A list of win-loss parameters, their standard error, and confidence interval.
+A list.
 }
 \description{
 Estimate win-loss parameters and their variance.

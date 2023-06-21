@@ -11,3 +11,4 @@
 #'   \item{group}{Treatment: 0=ususal care, 1=exercise training}
 #' }
 #' @source The WR package.
+"hf_action"

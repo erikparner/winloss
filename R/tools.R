@@ -1,196 +1,4 @@
-# tools_general.R
-
-estimate_ci <- function(estimate,
-                        conf.low,
-                        conf.high ,
-                        accuracy=1,
-                        separator="-",
-                        multiply=NULL) {
-  text <- glue("{number(estimate, accuracy=accuracy)} ({number(conf.low, accuracy=accuracy)}{separator}{number(conf.high, accuracy=accuracy)})")
-  text
-}
-
-# Simulate mortality and one recurrent event.
-#
-# The function outcome a data.frame with simulated (survival, recurrent count).
-# tmax: the administrative censoring.
-sim_recurrent <- function(n=100, rate1=1, rate2=1,  kmax=100000,  theta=0.5, ratec=1, tmax=2) {
-
-  kmaxplus <- kmax+1
-  u <- rCopula(n, claytonCopula(theta, dim = kmaxplus) )
-  u1 <- u[,1]
-  u2 <- u[,2:kmaxplus]
-
-  # Event times.
-  t1 <- qexp(u1, rate = rate1)
-  t2 <- qexp(u2, rate = rate2)
-  # Adding the recurrent times.
-  # Treating mortality and tmax.
-  if(kmax==1) {
-    t2 <- ifelse(t2>t1, Inf, t2)
-    t2 <- ifelse(t2>tmax, Inf, t2)
-  }
-  if(kmax>1) {
-    t2 <- t(apply(t2,1,cumsum))
-    for(i in 1:n) {
-      t2[i, t2[i,]>t1[i] ] <- Inf
-      t2[i, t2[i,]>tmax ] <- Inf
-    }
-  }
-
-  # Censoring.
-  if(ratec==0) {
-    c <- rep(tmax,n)
-  }
-  if(ratec>0) {
-    c <- rexp(n, rate=ratec)
-    c <- pmin(c, tmax)
-  }
-
-  # Censored event time and counting process.
-  ttilde1 <- pmin(t1,c)
-  deltatilde1 <- 1*(t1<=c)
-
-  ttilde2 <- t2
-  if(kmax==1) {
-    ttilde2 <- ifelse(ttilde2>c, Inf, ttilde2)
-  }
-  if(kmax>1) {
-    for(i in 1:n) {
-      ttilde2[i, ttilde2[i,]>c[i] ] <- Inf
-    }
-  }
-  ttilde2[ttilde2==Inf] <- NA
-
-  # Reshape to long.
-  # Everything is base r code.
-  ttilde2 <- data.frame(id=1:n, ttilde2)
-  names(ttilde2) <- c("id",paste0("time.",1:kmax))
-  ttilde2 <- reshape(ttilde2,
-                     direction = "long", idvar="id", varying = paste0("time.",1:kmax), sep=".",
-                     timevar = "recno")
-  ttilde2 <- subset(ttilde2, !is.na(time) )
-  ttilde2 <- ttilde2[order(ttilde2$id, ttilde2$recno),]
-
-  data1 <- data.frame(id=1:n       , time=ttilde1     , status=deltatilde1)
-  data2 <- data.frame(id=ttilde2$id, time=ttilde2$time, status=2)
-  data <- rbind(data1, data2)
-  data <- data[order(data$id, data$time),]
-  data <- data.frame(data, row.names = NULL)
-  data
-}
-
-# Simulate mortality and one recurrent event for two groups.
-sim_recurrentgr <- function(n1=100, n2=100,
-                            rate11=1, rate12=1,
-                            rate21=1, rate22=1,
-                            ratec1=1, ratec2=1,
-                            kmax=5, theta=0.5, tmax=2) {
-
-  data1 <- sim_recurrent(n=n1, rate1=rate11, rate2=rate12, ratec=ratec1, kmax=kmax,
-                         theta=theta, tmax=tmax)
-  data1$group <- 0
-  data2 <- sim_recurrent(n=n2, rate1=rate21, rate2=rate22, ratec=ratec2, kmax=kmax,
-                         theta=theta, tmax=tmax)
-  data2$group <- 1
-  data2$id <- n1+data2$id
-
-  data <- bind_rows(data1, data2)
-  data <- as.data.frame(data)
-  data
-}
-
-# Simulate single events where the first is mortality.
-sim_events <- function(n=100, rate=c(0.1,0.2,0.3), theta=0.5, ratec=1, tmax=2) {
-  # Number of event
-  n_events <- length(rate)
-  if(n_events<2) {
-    cat("Needs to be 2 or more event times.")
-    stop()
-  }
-  u <- rCopula(n, claytonCopula(theta, dim = n_events) )
-
-  # Event times.
-  t <- qexp(u, rate = rate)
-
-  # Censoring.
-  if(ratec==0) {
-    c <- rep(tmax,n)
-  }
-  if(ratec>0) {
-    c <- rexp(n, rate=ratec)
-    c <- pmin(c, tmax)
-  }
-
-  data <- data.frame(id=1:n,t,c)
-  names(data) <- c("id",paste0("t_",1:n_events),"c")
-  # head(data,n=10)
-  data_long <- data %>%
-    mutate(tfirst=t_1) %>%
-    pivot_longer(cols=starts_with("t_"),
-                 names_prefix ="t_",
-                 names_to="recno",
-                 values_to = "t") %>%
-    mutate(recno=as.numeric(recno)) %>%
-    # filter(t<Inf) %>%
-    # group_by(id) %>%
-    arrange(id,t) %>%
-    group_by(id) %>%
-    filter(t<=tfirst) %>%
-    mutate(ttilde=pmin(t,c),
-           status=if_else(t<c,recno,0),
-           censoring=1*(status==0),
-           running_censoring=cumsum(censoring)) %>%
-    filter(!(running_censoring>=2)) %>%
-    rename(time=ttilde) %>%
-    select(id, time, status) %>%
-    as.data.frame()
-
-  data_long
-}
-
-
-sim_eventsgr <- function(n1=100, rate1=c(0.1,0.2,0.3), ratec1=1,
-                         n2=100, rate2=c(0.1,0.2,0.3), ratec2=1,
-                         theta=0.5, tmax=2) {
-
-  data1 <- sim_events(n=n1, rate=rate1, theta=theta, ratec=ratec1, tmax=tmax)
-  data1$group <- 0
-  data2 <- sim_events(n=n2, rate=rate2, theta=theta, ratec=ratec2, tmax=tmax)
-  data2$group <- 1
-  data2$id <- n1+data2$id
-
-  data <- bind_rows(data1, data2)
-  data <- as.data.frame(data)
-  data
-}
-
-# A helper function to reshape data on the wide format for one secondary event.
-# Asssuming 0=censoring, 1=primary event, 2=secondary event.
-reshape_wide <- function(data) {
-  # Primary event.
-  data1 <- subset(data, status %in% c(0,1) )
-  ttilde1 <- data1$time
-  deltatilde1 <- data1$status
-  # Secondary event.
-  time_max <- max(data$time)
-  data2_events <- subset(data, status %in% c(2) )
-  data2 <- data.frame(id=data1$id, ttilde1, deltatilde1, group=data1$group)
-  data2 <- merge(data2, data2_events, all=TRUE)
-  data2$ttilde2 <- data2$time
-  data2$deltatilde2 <- 1
-  data2$deltatilde2[is.na(data2$time)] <- 0
-  # A convention for the death.
-  data2$ttilde2[is.na(data2$time) & data2$deltatilde1==1] <- time_max + 1
-  data2$ttilde2[is.na(data2$time) & data2$deltatilde1==0] <- data2$ttilde1[is.na(data2$time) & data2$deltatilde1==0]
-  ttilde2 <- data2$ttilde2
-  deltatilde2 <- data2$deltatilde2
-  data_wide <- data2
-  data_wide$time <- NULL
-  data_wide$status <- NULL
-  data_wide
-}
-
+# tools.R
 
 # The Kaplan-Meier distribution.
 #
@@ -201,7 +9,7 @@ reshape_wide <- function(data) {
 # @param at The time point where the win-loss probabilites are evaluated.
 unidistribution <- function(ttilde, deltatilde, at=NULL) {
   n <- length(ttilde)
-  fit <- prodlim(Hist(ttilde,deltatilde)~1)
+  fit <- prodlim::prodlim(prodlim::Hist(ttilde,deltatilde)~1)
   time <- fit$time
   index <- time<=at
   time <- time[index]
@@ -213,10 +21,8 @@ unidistribution <- function(ttilde, deltatilde, at=NULL) {
   # Derived.
   p <- c(1-S[1],S[1:(m-1)]-S[2:m])    # Here we use that it is a distribution(?)
   H <- Y/n                            # Needed to compute dH. Note H[1]=1.
-  dH <- c(H[2:m]-H[1:(m-1)], 0)       # Here we move the jump one to the left.
+  dH <- c(H[2:m]-H[1:(m-1)], 0)       # Move the jump one to the left.
 
-                                      # Here we move the jump one to the left.
-                                      dH <- c(H[2:m]-H[1:(m-1)],0)
   dLambda <- (1/Y)*dN
   data.frame(time, p, H, dH, dLambda)
 }
@@ -274,10 +80,10 @@ unidistribution0 <- function(ctilde, cdeltatilde, at=NULL) {
   anycensoring <- (sum(cdeltatilde)>0)
   # Indicator for event.
   if(anycensoring) {
-    fit <- prodlim(Hist(ctilde,cdeltatilde==0)~1, reverse=TRUE)
+    fit <- prodlim::prodlim(prodlim::Hist(ctilde,cdeltatilde==0)~1, reverse=TRUE)
     G <- fit$surv  # reverse is only affecting the surv object.
   } else {
-    fit <- prodlim(Hist(ctilde,cdeltatilde==0)~1)
+    fit <- prodlim::prodlim(prodlim::Hist(ctilde,cdeltatilde==0)~1)
     G <- rep(1, length(time))  # Defining the censoring survival function.
   }
   # Defining censoring specific.
@@ -389,13 +195,12 @@ second_distribution_extend <- function(dist, addtime) {
 #' @param at The time point where the win-loss probabilities are evaluated.
 #' @param type The type of analysis for each event type:
 #'        1=comparing event times, 2=comparing number of recurrent events at time point at.
-#'        The default is 1 for all event type.
 #' @param conf.level The level of the confidence interval.
-#' @return A list of win-loss parameters, their standard error, and confidence interval.
+#' @return A list.
 #' @export
 #' @examples
 #' winloss(id, time, status, group, at=2)
-  winloss <- function(id, time, status, group, at=1, type=NULL, conf.level = 0.95) {
+winloss <- function(id, time, status, group, at=1, type=NULL, conf.level = 0.95) {
 
   data <- data.frame(id=id, time=time, status=status, group=group)
 
@@ -475,13 +280,13 @@ second_distribution_extend <- function(dist, addtime) {
   Gm1 <- cens1$Sm
   dLambda10 <- cens1$dLambda
   H10 <- cens1$H
-  Gt1 <- tail(G1, 1)
+  Gt1 <- utils::tail(G1, 1)
   # Group 2.
   G2 <- cens2$S
   Gm2 <- cens2$Sm
   dLambda20 <- cens2$dLambda
   H20 <- cens2$H
-  Gt2 <- tail(G2, 1)
+  Gt2 <- utils::tail(G2, 1)
 
   # Win and loss of the survival outcome.
   phi[1] <- sum(S2*p1) # win1
@@ -715,7 +520,7 @@ second_distribution_extend <- function(dist, addtime) {
   sigma <- sigma1/n1 + sigma2/n2
 
   # Derived quantaties.
-  factor <- qnorm(1-(1-conf.level)/2 )
+  factor <- stats::qnorm(1-(1-conf.level)/2 )
   no_parameters <- length(phi)
   no_event_types <- no_parameters/2
   index_win_list <- 1+(0:(no_event_types-1))*2

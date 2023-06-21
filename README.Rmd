@@ -36,7 +36,6 @@ The package uses the R package prodlim.
 
 ```{r example}
 library(winloss)
-library(prodlim)
 ## basic example code
 fit <- winloss(id=hf_action$id,
                time=hf_action$time, 
@@ -68,7 +67,7 @@ c(fit$wr,fit$l_wr,fit$u_wr)
 
 The HF-ACTION data comes from the WR package. We performed some initial data cleaning:
 
-```{r , warning=FALSE, message = FALSE}
+```{r , eval=FALSE, warning=FALSE, message = FALSE}
 library(WR)
 library(tidyverse)
 library(magrittr)
