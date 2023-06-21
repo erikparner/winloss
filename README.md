@@ -7,7 +7,9 @@
 <!-- badges: end -->
 
 Inference for win-loss parameters using censored event data. The event
-data can be single or recurrent events.
+data can be single or recurrent events. Only the event type that is
+prioritized last is allow to be recurrent, in which case the number of
+recurrent event is compared.
 
 ## Installation
 

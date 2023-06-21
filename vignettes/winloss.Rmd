@@ -21,9 +21,6 @@ library(tidyverse)
 library(magrittr)
 ```
 
-# Introduction
-
-The package computes win and loss parameters, including the win ratio, for censored event data in a prioritized order. The event type that is prioritized last is allow to be recurrent, in which case the number of recurrent event is compared. 
 
 # The HF-ACTION study
 
