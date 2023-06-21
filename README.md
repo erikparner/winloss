@@ -7,9 +7,9 @@
 <!-- badges: end -->
 
 Inference for win-loss parameters using censored event data. The event
-data can be single or recurrent events. Only the event type that is
-prioritized last is allow to be recurrent, in which case the number of
-recurrent event is compared.
+data can in general be single event. However, we allow the last event to
+be recurrent events, in which case the number of recurrent event is
+compared.
 
 ## Installation
 
@@ -58,4 +58,44 @@ For example, display the win-ratio with 95% confidence interval:
 ``` r
 c(fit$wr,fit$l_wr,fit$u_wr)
 #> [1] 1.3249359 0.8872591 1.9785146
+```
+
+# The HF-ACTION study
+
+The HF-ACTION data comes from the WR package. We performed some initial
+data cleaning:
+
+``` r
+library(WR)
+library(tidyverse)
+library(magrittr)
+
+data <- hfaction_cpx9
+
+# Rename and recode id.
+data$patid <- as.numeric(substr(data$patid, 6, 12))
+names(data) <- c("id","time","status","group","age60")
+
+# Time=0 problem (id==1359)
+data <- data %>%
+  mutate(time=ifelse(time<0.00001, 0.01, time)) 
+
+# time=lag(time) problem (id=662).
+data <- data %>%
+  group_by(id) %>%
+  mutate(time=ifelse(time==lag(time, default=0),time+0.001,time))
+
+head(data)
+#> # A tibble: 6 × 5
+#> # Groups:   id [2]
+#>      id   time status group age60
+#>   <dbl>  <dbl>  <int> <int> <int>
+#> 1     1  7.25       2     0     1
+#> 2     1 12.6        0     0     1
+#> 3     2  0.754      2     0     1
+#> 4     2  4.30       2     0     1
+#> 5     2  4.75       2     0     1
+#> 6     2 45.9        0     0     1
+
+# hf_action <- data
 ```

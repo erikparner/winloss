@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-Inference for win-loss parameters using censored event data. The event data can be single or recurrent events. Only the event type that is prioritized last is allow to be recurrent, in which case the number of recurrent event is compared.
+Inference for win-loss parameters using censored event data. The event data can in general be single event. However, we allow the last event to be recurrent events, in which case the number of recurrent event is compared.
 
 
 ## Installation
@@ -64,3 +64,31 @@ c(fit$wr,fit$l_wr,fit$u_wr)
 ```
 
 
+# The HF-ACTION study
+
+The HF-ACTION data comes from the WR package. We performed some initial data cleaning:
+
+```{r , warning=FALSE, message = FALSE}
+library(WR)
+library(tidyverse)
+library(magrittr)
+
+data <- hfaction_cpx9
+
+# Rename and recode id.
+data$patid <- as.numeric(substr(data$patid, 6, 12))
+names(data) <- c("id","time","status","group","age60")
+
+# Time=0 problem (id==1359)
+data <- data %>%
+  mutate(time=ifelse(time<0.00001, 0.01, time)) 
+
+# time=lag(time) problem (id=662).
+data <- data %>%
+  group_by(id) %>%
+  mutate(time=ifelse(time==lag(time, default=0),time+0.001,time))
+
+head(data)
+
+# hf_action <- data
+```
