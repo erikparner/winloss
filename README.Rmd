@@ -28,6 +28,12 @@ The method generalizes to multiple single events. Further, it generalizes to eve
 
 ## Installation
 
+The package can be installed from CRAN with
+
+``` r
+install.packages('winloss')
+```
+
 You can install the development version of winloss from [GitHub](https://github.com/) with:
 
 ``` r

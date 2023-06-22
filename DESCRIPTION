@@ -1,17 +1,19 @@
 Package: winloss
-Title: Inference for win-loss parameters for censored event data
+Title: Inference for Win-Loss Parameters for Censored Event Data
 Version: 0.0.0.10
 Authors@R: 
-    person("Erik", "Parner", , "parner@ph.au.dk", role = c("aut", "cre"),
+    person("Erik", "Parner", , "parner@ph.au.dk", role = c("aut", "cre", "cph   "),
            comment = c(ORCID = "0000-0003-3661-1922"))
-Description: Inference for win-loss parameters for censored event data.
+Description: Inference for win-loss parameters for censored event data. The implementation 
+    focus on two prioritized events, where the first is death and the second is either a 
+    single event or a recurrent event.
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 URL: https://github.com/erikparner/winloss
 BugReports: https://github.com/erikparner/winloss/issues
 Imports:
-    prodlim
+    prodlim (>= 2023.03.3)
 Suggests: 
     knitr,
     rmarkdown

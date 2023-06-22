@@ -4,9 +4,9 @@
 #
 # Estimate various functions of the univariate distributions.
 #
-# @param ttilde The censored event time.
-# @param deltatilde The event indicator.
-# @param at The time point where the win-loss probabilites are evaluated.
+# ttilde The censored event time.
+# deltatilde The event indicator.
+# at The time point where the win-loss probabilities are evaluated.
 unidistribution <- function(ttilde, deltatilde, at=NULL) {
   n <- length(ttilde)
   fit <- prodlim::prodlim(prodlim::Hist(ttilde,deltatilde)~1)
@@ -196,7 +196,7 @@ second_distribution_extend <- function(dist, addtime) {
 #' @param type The type of analysis for each event type:
 #'        1=comparing event times, 2=comparing number of recurrent events at time point at.
 #' @param conf.level The level of the confidence interval.
-#' @return A list.
+#' @return A data.frame.
 #' @export
 #' @examples
 #' winloss(id=hf_action$id,
