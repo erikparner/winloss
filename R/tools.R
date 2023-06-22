@@ -199,7 +199,12 @@ second_distribution_extend <- function(dist, addtime) {
 #' @return A list.
 #' @export
 #' @examples
-#' winloss(id, time, status, group, at=2)
+#' winloss(id=hf_action$id,
+#'         time=hf_action$time,
+#'         status=hf_action$status,
+#'         group=hf_action$group,
+#'         type=c(1,2),
+#'         at=47)
 winloss <- function(id, time, status, group, at=1, type=NULL, conf.level = 0.95) {
 
   data <- data.frame(id=id, time=time, status=status, group=group)

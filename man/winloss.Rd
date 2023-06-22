@@ -32,7 +32,12 @@ Estimate win-loss parameters and their variance.
 The winloss package contain a function for inference of win-loss parameters based on censored event data.
 }
 \examples{
-winloss(id, time, status, group, at=2)
+winloss(id=hf_action$id,
+        time=hf_action$time,
+        status=hf_action$status,
+        group=hf_action$group,
+        type=c(1,2),
+        at=47)
 }
 \seealso{
 \code{\link{winloss}} Inference

@@ -18,10 +18,17 @@ knitr::opts_chunk$set(
 library(winloss)
 ```
 
+## Introduction
+
+Inference for win-loss parameters using censored event data. The implementation focus on two prioritized events, where the first is death and the second is either a single event or a recurrent event. The methods are described in the manuscripts:
+
+* Parner and Overgaard (2023). Estimation of win, loss probabilities and win ratio based on right-censored event data. Submitted.
+* Parner and Overgaard (2023). Win-loss parameters for right-censored event data, with application to recurrent events. Submitted.
+
+The method seem to generalize to multiple single events, Further, the events may be a combination of single events and recurrent events as long as the recurrent events are the last prioritized event.
+
 
 ## Example
-
-The package uses the R package prodlim.
 
 ```{r example}
 
@@ -80,4 +87,3 @@ head(data)
 
 hf_action <- data
 ```
-

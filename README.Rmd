@@ -18,7 +18,12 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-Inference for win-loss parameters using censored event data. The event data can in general be single event. However, we allow the last event to be recurrent events, in which case the number of recurrent event is compared.
+Inference for win-loss parameters using censored event data. The implementation focus on two prioritized events, where the first is death and the second is either a single event or a recurrent event. The methods are described in the manuscripts:
+
+* Parner and Overgaard (2023). Estimation of win, loss probabilities and win ratio based on right-censored event data. Submitted.
+* Parner and Overgaard (2023). Win-loss parameters for right-censored event data, with application to recurrent events. Submitted.
+
+The method seem to generalize to multiple single events, Further, the events may be a combination of single events and recurrent events as long as the recurrent events are the last prioritized event.
 
 
 ## Installation
@@ -31,8 +36,6 @@ devtools::install_github("erikparner/winloss")
 ```
 
 ## Example
-
-The package uses the R package prodlim.
 
 ```{r example}
 library(winloss)
@@ -56,38 +59,35 @@ The fit contain a vector of the win-loss parameter *wl* ordered as: first win, f
 * event specific ranking probability: *rankedk*
 * total ranking probability: *ranked*
 
-For example, display the win-ratio with 95% confidence interval:
+For example, displaying the win-ratio with 95% confidence interval:
 
 ```{r example-result}
 c(fit$wr,fit$l_wr,fit$u_wr)
 ```
 
 
-# The HF-ACTION study
+## The HF-ACTION study
 
-The HF-ACTION data comes from the WR package. We performed some initial data cleaning:
+The HF-ACTION data comes from the WR package. We performed some initial data cleaning for the version appearing in this package:
 
 ```{r , eval=FALSE, warning=FALSE, message = FALSE}
 library(WR)
 library(tidyverse)
 library(magrittr)
 
-data <- hfaction_cpx9
+hf_action <- hfaction_cpx9
 
 # Rename and recode id.
-data$patid <- as.numeric(substr(data$patid, 6, 12))
-names(data) <- c("id","time","status","group","age60")
+hf_action$patid <- as.numeric(substr(hf_action$patid, 6, 12))
+names(hf_action) <- c("id","time","status","group","age60")
 
 # Time=0 problem (id==1359)
-data <- data %>%
+hf_action <- hf_action %>%
   mutate(time=ifelse(time<0.00001, 0.01, time)) 
 
 # time=lag(time) problem (id=662).
-data <- data %>%
+hf_action <- hf_action %>%
   group_by(id) %>%
   mutate(time=ifelse(time==lag(time, default=0),time+0.001,time))
-
-head(data)
-
-# hf_action <- data
 ```
+
