@@ -54,7 +54,7 @@ fit <- winloss(id=hf_action$id,
                at=47)
 ```
 
-The fit contain a vector of the win-loss parameter *wl* ordered as: first win, first loss, second win, second loss, ect. The asumptotic variance *sigma*. For all win-loss parameters, stub say, the fit contains the standard error, *se_stub*, lower and upper 95% confidence interval, *l_stub* and *u_stub*. The coverage of the confidence interval can be changed in the win-loss function. The parameters are
+The fit contain a vector of the win-loss parameter *wl* ordered as: first win, first loss, second win, second loss, ect. The asymptotic variance *sigma*. For all win-loss parameters, stub say, the fit contains the standard error, *se_stub*, lower and upper 95% confidence interval, *l_stub* and *u_stub*. The coverage of the confidence interval can be changed in the win-loss function. The parameters are
 
 * win-loss of each event type: *wl*
 * total win ratio and log win ratio: *wr* and *logwr*

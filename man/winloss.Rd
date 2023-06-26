@@ -5,14 +5,14 @@
 \alias{winloss}
 \title{Estimate win-loss parameters and their variance}
 \usage{
-winloss(id, time, status, group, at = 1, type = NULL, conf.level = 0.95)
+winloss(id, time, status, group, at, type = NULL, conf.level = 0.95)
 }
 \arguments{
 \item{id}{The id variable.}
 
 \item{time}{The time variable.}
 
-\item{status}{The status variable.}
+\item{status}{The status variable coded: 0=censoring, 1=death, 2=secondary events, ...}
 
 \item{group}{The group variable. Assuming groups are coded 0,1.}
 
@@ -24,12 +24,25 @@ winloss(id, time, status, group, at = 1, type = NULL, conf.level = 0.95)
 \item{conf.level}{The level of the confidence interval.}
 }
 \value{
-A data.frame.
+A list containing: the win-loss parameter \emph{wl} ordered as: first win, first loss,
+second win, second loss, ect. The asymptotic variance \emph{sigma}.
+For all win-loss parameters, stub say, the fit contains the standard error,
+\emph{se_stub}, lower and upper 95\% confidence interval, \emph{l_stub} and \emph{u_stub}.
+The coverage of the confidence interval can be changed in the win-loss function.
+The parameters are
+win-loss of each event type: \emph{wl};
+total win ratio and log win ratio: \emph{wr} and \emph{logwr};
+total win difference: \emph{wd};
+event specific win ratio and log win ratio: \emph{wrk} and \emph{logwrk};
+event specific win difference: \emph{wrk} and \emph{logwrk};
+total win and loss: \emph{w} and \emph{l};
+event specific ranking probability: \emph{rankedk};
+total ranking probability: \emph{ranked}.
 }
 \description{
 Estimate win-loss parameters and their variance.
 
-The winloss package contain a function for inference of win-loss parameters based on censored event data.
+The winloss package contains a function for inference of win-loss parameters based on censored event data.
 }
 \examples{
 winloss(id=hf_action$id,

@@ -197,7 +197,20 @@ second_distribution_extend <- function(dist, addtime) {
 #' @param type The type of analysis for each event type:
 #'        1=comparing event times, 2=comparing number of recurrent events at time point at.
 #' @param conf.level The level of the confidence interval.
-#' @return A list.
+#' @return A list containing: the win-loss parameter *wl* ordered as: first win, first loss,
+#'         second win, second loss, ect. The asymptotic variance *sigma*.
+#'         For all win-loss parameters, stub say, the fit contains the standard error,
+#'         *se_stub*, lower and upper 95% confidence interval, *l_stub* and *u_stub*.
+#'         The coverage of the confidence interval can be changed in the win-loss function.
+#'         The parameters are:
+#'         win-loss of each event type (*wl*);
+#'         total win ratio and log win ratio (*wr* and *logwr*);
+#'         total win difference (*wd*);
+#'         event specific win ratio and log win ratio (*wrk* and *logwrk*);
+#'         event specific win difference (*wrk* and *logwrk*);
+#'         total win and loss (*w* and *l*);
+#'         event specific ranking probability (*rankedk*);
+#'         total ranking probability (*ranked*).
 #' @export
 #' @examples
 #' winloss(id=hf_action$id,
