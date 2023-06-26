@@ -24,7 +24,7 @@ winloss(id, time, status, group, at = 1, type = NULL, conf.level = 0.95)
 \item{conf.level}{The level of the confidence interval.}
 }
 \value{
-A list.
+A data.frame.
 }
 \description{
 Estimate win-loss parameters and their variance.

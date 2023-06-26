@@ -184,19 +184,20 @@ second_distribution_extend <- function(dist, addtime) {
   list(time=time_extend, pH=pH, pH_total=pH_total, H=H, Hm=Hm, p=p, S=S, dS=dS, Gt=Gt)
 }
 
+
 #' Estimate win-loss parameters and their variance
 #'
 #' Estimate win-loss parameters and their variance.
 #'
 #' @param id The id variable.
 #' @param time The time variable.
-#' @param status The status variable.
+#' @param status The status variable coded: 0=censoring, 1=death, 2=secondary events, ...
 #' @param group The group variable. Assuming groups are coded 0,1.
 #' @param at The time point where the win-loss probabilities are evaluated.
 #' @param type The type of analysis for each event type:
 #'        1=comparing event times, 2=comparing number of recurrent events at time point at.
 #' @param conf.level The level of the confidence interval.
-#' @return A data.frame.
+#' @return A list.
 #' @export
 #' @examples
 #' winloss(id=hf_action$id,
@@ -205,7 +206,7 @@ second_distribution_extend <- function(dist, addtime) {
 #'         group=hf_action$group,
 #'         type=c(1,2),
 #'         at=47)
-winloss <- function(id, time, status, group, at=1, type=NULL, conf.level = 0.95) {
+winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
 
   data <- data.frame(id=id, time=time, status=status, group=group)
 

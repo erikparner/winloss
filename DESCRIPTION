@@ -2,7 +2,7 @@ Package: winloss
 Title: Inference for Win-Loss Parameters for Censored Event Data
 Version: 0.0.0.10
 Authors@R: 
-    person("Erik", "Parner", , "parner@ph.au.dk", role = c("aut", "cre", "cph   "),
+    person("Erik", "Parner", , "parner@ph.au.dk", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0003-3661-1922"))
 Description: Inference for win-loss parameters for censored event data. The implementation 
     focus on two prioritized events, where the first is death and the second is either a 
