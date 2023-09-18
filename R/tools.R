@@ -236,7 +236,7 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
   # Check that all event except the last is single event.
   test_type <- length(unique(type[1:(no_event_types-1)]))==1
   if(!test_type) {
-    stop("The function can only handle two prioritized event types.")
+    stop("Only the last event is allowed to be recurrent.")
   }
 
   # survival event.
@@ -291,21 +291,21 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
   cdeltatilde2 <- 1-deltatilde21
   cens1 <- unidistribution0(ctilde1, cdeltatilde1, at=at)
   cens2 <- unidistribution0(ctilde2, cdeltatilde2, at=at)
-  cens1 <- distextendtime(cens1, cens2$time)
-  cens2 <- distextendtime(cens2, cens1$time)
+  cens1 <- distextendtime(cens1, c(cens2$time, at) )
+  cens2 <- distextendtime(cens2, c(cens1$time, at) )
   time0 <- cens1$time
   m0 <- length(time0)
   G1 <- cens1$S
   Gm1 <- cens1$Sm
   dLambda10 <- cens1$dLambda
   H10 <- cens1$H
-  Gt1 <- utils::tail(G1, 1)
+  Gtm1 <- utils::tail(Gm1, 1)
   # Group 2.
   G2 <- cens2$S
   Gm2 <- cens2$Sm
   dLambda20 <- cens2$dLambda
   H20 <- cens2$H
-  Gt2 <- utils::tail(G2, 1)
+  Gtm2 <- utils::tail(Gm2, 1)
 
   # Win and loss of the survival outcome.
   phi[1] <- sum(S2*p1) # win1
@@ -371,8 +371,8 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
       deltatilde22 <- deltatilde2[data1$group==1]
 
       # Event time distribution.
-      second_dist1 <- second_distribution(selection1, ttilde12, Gt=Gt1, at=at)
-      second_dist2 <- second_distribution(selection2, ttilde22, Gt=Gt2, at=at)
+      second_dist1 <- second_distribution(selection1, ttilde12, deltatilde12, Gtm=Gtm1, at=at)
+      second_dist2 <- second_distribution(selection2, ttilde22, deltatilde22, Gtm=Gtm2, at=at)
       second_dist1 <- second_distribution_extend(second_dist1, second_dist2$time)
       second_dist2 <- second_distribution_extend(second_dist2, second_dist1$time)
       # Group 1.
@@ -405,9 +405,11 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
         Y10i <- 1*(time0<ctilde1[i]) + 1*(ctilde1[i]==time0 & cdeltatilde1[i]==1)
         M10i <- N10i - cumsum(Y10i*dLambda10)
         dM10i <- c(M10i[1],M10i[2:m0]-M10i[1:(m0-1)])
-        intinvLambdaHdM10i <- sum( (1/((1-dLambda10)*H10))*dM10i )
-        Sbivprime1 <- (1/Gt1)*(N12i-H12) + (1/Gt1)*intinvLambdaHdM10i*H12
-        Sbivprime1m <- (1/Gt1)*(N12im-H12m) + (1/Gt1)*intinvLambdaHdM10i*H12m
+        invLambdaHdM10i <- (1/((1-dLambda10)*H10))*dM10i
+        invLambdaHdM10i[m0] <- 0
+        intinvLambdaHdM10i <- sum( invLambdaHdM10i )
+        Sbivprime1 <- (1/Gtm1)*(N12i-H12) + (1/Gtm1)*intinvLambdaHdM10i*H12
+        Sbivprime1m <- (1/Gtm1)*(N12im-H12m) + (1/Gtm1)*intinvLambdaHdM10i*H12m
         dSbivprime1 <- Sbivprime1-Sbivprime1m
         dphi211[i] <- -sum(Sbiv2*dSbivprime1) # win2
         dphi221[i] <- -sum(Sbivprime1*dSbiv2) # loss2
@@ -417,7 +419,6 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
       # dphi211 and dphi121.
       dphi212 <- rep(NA,length=n2)
       dphi222 <- rep(NA,length=n2)
-      i <- 1
       for(i in 1:n2) {
         N22i <- 1*(selection2[i]==1 & ttilde22[i]>time2)
         N22im <- 1*(selection2[i]==1 & ttilde22[i]>=time2)
@@ -425,9 +426,11 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
         Y20i <- 1*(time0<ctilde2[i]) + 1*(ctilde2[i]==time0 & cdeltatilde2[i]==1)
         M20i <- N20i - cumsum(Y20i*dLambda20)
         dM20i <- c(M20i[1],M20i[2:m0]-M20i[1:(m0-1)])
-        intinvLambdaHdM20i <- sum( (1/((1-dLambda20)*H20))*dM20i )
-        Sbivprime2 <- (1/Gt2)*(N22i-H22) +  (1/Gt2)*intinvLambdaHdM20i*H22
-        Sbivprime2m <- (1/Gt2)*(N22im-H22m) +  (1/Gt2)*intinvLambdaHdM20i*H22m
+        invLambdaHdM20i <- (1/((1-dLambda20)*H20))*dM20i
+        invLambdaHdM20i[m0] <- 0
+        intinvLambdaHdM20i <- sum( invLambdaHdM20i )
+        Sbivprime2 <- (1/Gtm2)*(N22i-H22) +  (1/Gtm2)*intinvLambdaHdM20i*H22
+        Sbivprime2m <- (1/Gtm2)*(N22im-H22m) +  (1/Gtm2)*intinvLambdaHdM20i*H22m
         dSbivprime2 <- Sbivprime2-Sbivprime2m
         dphi212[i] <- -sum(Sbivprime2*dSbiv1) # win2
         dphi222[i] <- -sum(Sbiv1*dSbivprime2) # loss2
@@ -449,26 +452,26 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
       Ntilde22 <- Ntilde[data1$group==1]
 
       # Recurrent event distribution.
-      recurrent_dist1 <- recurrent_distribution(selection1, Ntilde12, Gt=Gt1, at=at)
-      recurrent_dist2 <- recurrent_distribution(selection2, Ntilde22, Gt=Gt2, at=at)
+      recurrent_dist1 <- recurrent_distribution(selection1, Ntilde12, Gtm=Gtm1, at=at)
+      recurrent_dist2 <- recurrent_distribution(selection2, Ntilde22, Gtm=Gtm2, at=at)
       recurrent_dist1 <- recurrent_distribution_extend(recurrent_dist1, recurrent_dist2$Nk)
       recurrent_dist2 <- recurrent_distribution_extend(recurrent_dist2, recurrent_dist1$Nk)
       Nk <- recurrent_dist1$Nk
       mN <- length(Nk)
       # Group 1.
       pN1 <- recurrent_dist1$pN
-      Gt1 <- recurrent_dist1$Gt
+      Gtm1 <- recurrent_dist1$Gtm
       FN1 <- cumsum(pN1)
       FmN1 <- c(0,FN1[1:(mN-1)])
-      pH1 <- Gt1*pN1
+      pH1 <- Gtm1*pN1
       FH1 <- cumsum(pH1)
       FmH1 <- c(0,FH1[1:(mN-1)])
       # Group 2.
       pN2 <- recurrent_dist2$pN
-      Gt2 <- recurrent_dist2$Gt
+      Gtm2 <- recurrent_dist2$Gtm
       FN2 <- cumsum(pN2)
       FmN2 <- c(0,FN2[1:(mN-1)])
-      pH2 <- Gt2*pN2
+      pH2 <- Gtm2*pN2
       FH2 <- cumsum(pH2)
       FmH2 <- c(0,FH2[1:(mN-1)])
 
@@ -479,7 +482,6 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
       # dphi211 and dphi121.
       dphi211 <- rep(NA,length=n1)
       dphi221 <- rep(NA,length=n1)
-      i <- 1
       for(i in 1:n1) {
         pN1i <- 1*(selection1[i]==1 & Ntilde12[i]==Nk)
         FN1i <- 1*(selection1[i]==1 & Ntilde12[i]<=Nk)
@@ -488,10 +490,12 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
         Y10i <- 1*(time0<ctilde1[i]) + 1*(ctilde1[i]==time0 & cdeltatilde1[i]==1)
         M10i <- N10i - cumsum(Y10i*dLambda10)
         dM10i <- c(M10i[1],M10i[2:m0]-M10i[1:(m0-1)])
-        intinvLambdaHdM10i <- sum( (1/((1-dLambda10)*H10))*dM10i )
-        pN1prime <- (1/Gt1)*(pN1i-pH1) +  (1/Gt1)*intinvLambdaHdM10i*pH1
-        FN1prime <- (1/Gt1)*(FN1i-FH1) +  (1/Gt1)*intinvLambdaHdM10i*FH1
-        FmN1prime <- (1/Gt1)*(FmN1i-FmH1) +  (1/Gt1)*intinvLambdaHdM10i*FmH1
+        invLambdaHdM10i <- (1/((1-dLambda10)*H10))*dM10i
+        invLambdaHdM10i[m0] <- 0
+        intinvLambdaHdM10i <- sum( invLambdaHdM10i )
+        pN1prime <- (1/Gtm1)*(pN1i-pH1) +  (1/Gtm1)*intinvLambdaHdM10i*pH1
+        FN1prime <- (1/Gtm1)*(FN1i-FH1) +  (1/Gtm1)*intinvLambdaHdM10i*FH1
+        FmN1prime <- (1/Gtm1)*(FmN1i-FmH1) +  (1/Gtm1)*intinvLambdaHdM10i*FmH1
         dphi211[i] <- sum(FmN2*pN1prime)  # win2
         dphi221[i] <- sum(FmN1prime*pN2)  # loss2
       }
@@ -506,13 +510,16 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
         FN2i <- 1*(selection2[i]==1 & Ntilde22[i]<=Nk)
         FmN2i <- 1*(selection2[i]==1 & Ntilde22[i]<Nk)
         N20i <- 1*(ctilde2[i]<=time0 & cdeltatilde2[i]==1)
+        # xxx
         Y20i <- 1*(time0<ctilde2[i]) + 1*(ctilde2[i]==time0 & cdeltatilde2[i]==1)
         M20i <- N20i - cumsum(Y20i*dLambda20)
         dM20i <- c(M20i[1],M20i[2:m0]-M20i[1:(m0-1)])
-        intinvLambdaHdM20i <- sum( (1/((1-dLambda20)*H20))*dM20i )
-        pN2prime <- (1/Gt2)*(pN2i-pH2) +  (1/Gt2)*intinvLambdaHdM20i*pH2
-        FN2prime <- (1/Gt2)*(FN2i-FH2) +  (1/Gt2)*intinvLambdaHdM20i*FH2
-        FmN2prime <- (1/Gt2)*(FmN2i-FmH2) +  (1/Gt2)*intinvLambdaHdM20i*FmH2
+        invLambdaHdM20i <-  (1/((1-dLambda20)*H20))*dM20i
+        invLambdaHdM20i[m0] <- 0
+        intinvLambdaHdM20i <- sum( invLambdaHdM20i )
+        pN2prime <- (1/Gtm2)*(pN2i-pH2) +  (1/Gtm2)*intinvLambdaHdM20i*pH2
+        FN2prime <- (1/Gtm2)*(FN2i-FH2) +  (1/Gtm2)*intinvLambdaHdM20i*FH2
+        FmN2prime <- (1/Gtm2)*(FmN2i-FmH2) +  (1/Gtm2)*intinvLambdaHdM20i*FmH2
         dphi212[i] <- sum(FmN2prime*pN1)  # win2
         dphi222[i] <- sum(FmN1*pN2prime)  # loss2
       }
@@ -633,11 +640,11 @@ winloss <- function(id, time, status, group, at, type=NULL, conf.level = 0.95) {
     rankedk[i] <- sum(wl[index])
     gprime[index] <- 1
     gprime <- matrix(gprime, ncol=1, nrow=no_parameters)
-    var_w <- t(gprime) %*% sigma %*% gprime
-    se_w <- sqrt(var_w)
-    se_rankedk[i] <- se_w
-    l_rankedk[i] <- rankedk[i] - factor*se_w
-    u_rankedk[i] <- rankedk[i] + factor*se_w
+    var <- t(gprime) %*% sigma %*% gprime
+    se <- sqrt(var)
+    se_rankedk[i] <- se
+    l_rankedk[i] <- rankedk[i] - factor*se
+    u_rankedk[i] <- rankedk[i] + factor*se
   }
   ranked <- sum(wl)
   gprime <- matrix(rep(1,no_parameters),
